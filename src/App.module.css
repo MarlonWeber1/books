@@ -113,6 +113,27 @@
   color: var(--ink-muted);
 }
 
+/* --- Map placeholder (removido no Commit 4) ------------ */
+.mapPlaceholder {
+  background-color: var(--bg-surface);
+  border: 1px dashed var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: var(--space-8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  text-align: center;
+  min-height: 200px;
+  animation: fadeSlideUp 300ms var(--ease-out) forwards;
+}
+
+.mapPlaceholder p {
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+}
+
 /* --- Footer -------------------------------------------- */
 .footer {
   padding-block: var(--space-6);

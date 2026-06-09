@@ -1,14 +1,20 @@
+import { useState } from 'react'
 import { useBookSearch } from './hooks/useBookSearch'
 import { SearchBar } from './components/SearchBar'
 import { BookList } from './components/BookList'
+import { BookDetails } from './components/BookDetails'
 import styles from './App.module.css'
 
 /**
  * App — Shell principal da aplicação Biblioatlas.
  *
+ * Estado gerenciado aqui:
+ * - useBookSearch: query, results, selectedBook, status, error
+ * - exploreLanguage: código ISO 639-1 do idioma a mapear (Commit 4)
+ *
  * Layout split-screen:
  * - Coluna esquerda (380px): SearchBar + BookList
- * - Coluna direita (1fr): BookDetails + WorldMap (Commits 3 e 4)
+ * - Coluna direita (1fr)  : BookDetails + WorldMap
  */
 function App() {
   const {
@@ -22,9 +28,23 @@ function App() {
     clear,
   } = useBookSearch()
 
+  // Idioma a ser explorado no mapa (preenchido pelo botão "Ver no mapa")
+  const [exploreLanguage, setExploreLanguage] = useState(null)
+
+  function handleExploreMap(isoCode) {
+    setExploreLanguage(isoCode)
+    // WorldMap será adicionado no Commit 4
+  }
+
+  // Ao trocar de livro selecionado, limpa o mapa anterior
+  function handleSelectBook(book) {
+    selectBook(book)
+    setExploreLanguage(null)
+  }
+
   return (
     <div className={styles.root}>
-      {/* Header */}
+      {/* ── Header ─────────────────────────────────── */}
       <header className={styles.header}>
         <div className="container">
           <div className={styles.headerInner}>
@@ -46,7 +66,7 @@ function App() {
         </div>
       </header>
 
-      {/* Main split layout */}
+      {/* ── Main ───────────────────────────────────── */}
       <main className={styles.main}>
         <div className="container">
           <div className={styles.layout}>
@@ -65,24 +85,28 @@ function App() {
                 error={error}
                 query={query}
                 selectedBook={selectedBook}
-                onSelect={selectBook}
+                onSelect={handleSelectBook}
               />
             </aside>
 
-            {/* Painel direito: detalhes + mapa (Commits 3 e 4) */}
+            {/* Painel direito: detalhes + mapa */}
             <section className={styles.panelRight}>
-              {selectedBook ? (
-                <div className={styles.placeholderPanel}>
-                  <span className={styles.placeholderLabel}>Selecionado</span>
-                  <p style={{ color: 'var(--ink-primary)', fontWeight: 500 }}>
-                    {selectedBook.title}
+              <BookDetails
+                book={selectedBook}
+                onExploreMap={handleExploreMap}
+              />
+              {/* WorldMap adicionado no Commit 4 */}
+              {exploreLanguage && (
+                <div className={styles.mapPlaceholder}>
+                  <span className={styles.placeholderLabel}>Mapa</span>
+                  <p>
+                    Buscando países com idioma{' '}
+                    <strong style={{ color: 'var(--accent)' }}>
+                      {exploreLanguage.toUpperCase()}
+                    </strong>
+                    …
                   </p>
-                  <p>Detalhes e mapa adicionados nos Commits 3 e 4</p>
-                </div>
-              ) : (
-                <div className={styles.placeholderPanel}>
-                  <span className={styles.placeholderLabel}>Detalhes + Mapa</span>
-                  <p>Selecione um livro para ver os detalhes</p>
+                  <p>WorldMap adicionado no Commit 4</p>
                 </div>
               )}
             </section>
@@ -91,7 +115,7 @@ function App() {
         </div>
       </main>
 
-      {/* Footer */}
+      {/* ── Footer ─────────────────────────────────── */}
       <footer className={styles.footer}>
         <div className="container">
           <p>

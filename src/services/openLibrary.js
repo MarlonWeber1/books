@@ -28,6 +28,47 @@ export function getCoverUrl(coverId, size = 'M') {
 }
 
 /**
+ * Busca detalhes expandidos de uma obra (descrição, assuntos, lugares).
+ * Usa a Works API: GET /works/{key}.json
+ * @param {string} workKey — Ex: "/works/OL45883W"
+ * @returns {Promise<Object>} Detalhes complementares da obra
+ */
+export async function fetchBookDetails(workKey) {
+  const res = await fetch(`${BASE_URL}${workKey}.json`, {
+    signal: AbortSignal.timeout(10_000),
+  })
+
+  if (!res.ok) {
+    throw new Error(`Open Library respondeu com status ${res.status}`)
+  }
+
+  const data = await res.json()
+  return normalizeWorkDetails(data)
+}
+
+/**
+ * Normaliza os detalhes brutos da Works API.
+ * A API retorna `description` como string ou como { type, value }.
+ */
+function normalizeWorkDetails(data) {
+  let description = null
+
+  if (data.description) {
+    description =
+      typeof data.description === 'string'
+        ? data.description
+        : data.description?.value ?? null
+  }
+
+  return {
+    description,
+    subjects: (data.subjects ?? []).slice(0, 8),
+    subjectPlaces: (data.subject_places ?? []).slice(0, 5),
+    subjectPeople: (data.subject_people ?? []).slice(0, 4),
+  }
+}
+
+/**
  * Pesquisa livros pelo título.
  * @param {string} query
  * @param {number} limit
