@@ -1,42 +1,18 @@
-/**
- * BookDetails — Painel de detalhes da obra selecionada
- *
- * Layout:
- *   ┌──────────────────────────────────────────────────┐
- *   │  [Capa L]   Título (proeminente)                 │
- *   │  200×280    Autor(es)                            │
- *   │             Ano · Edições                        │
- *   │             ─────────────────────────────────    │
- *   │             Idioma Principal  [badge ISO]        │
- *   │             [btn: Explorar no Mapa →]            │
- *   └──────────────────────────────────────────────────┘
- *   │  Sinopse (se disponível)                        │
- *   │  Tags de assuntos                               │
- *   └──────────────────────────────────────────────────┘
- */
-
-import { BookOpen, User, Calendar, Books, Translate, ArrowSquareOut, Globe } from '@phosphor-icons/react'
+import { useState, useEffect } from 'react'
+import { BookOpen, User, Calendar, Books, ArrowSquareOut, Globe } from '@phosphor-icons/react'
 import { useBookDetails } from '../../hooks/useBookDetails'
-import { normalizeLanguageCode, getLanguageName } from '../../utils/languageMapper'
+import {
+  detectPrimaryLanguage,
+  detectAllLanguages,
+  getLanguageName,
+} from '../../utils/languageMapper'
 import { getCoverUrl } from '../../services/openLibrary'
 import styles from './BookDetails.module.css'
 
-/** Extrai e normaliza o idioma principal de um livro */
-function getPrimaryLanguage(languages) {
-  if (!languages?.length) return null
-  for (const lang of languages) {
-    const iso = normalizeLanguageCode(lang)
-    if (iso) return iso
-  }
-  return null
-}
-
-/** Estado quando nenhum livro está selecionado */
 function EmptyPanel() {
   return (
     <div className={styles.emptyPanel}>
       <div className={styles.emptyIllustration} aria-hidden="true">
-        {/* SVG: livro aberto + globo */}
         <svg width="72" height="72" viewBox="0 0 72 72" fill="none">
           <rect x="8" y="14" width="30" height="40" rx="4" fill="var(--bg-elevated)" stroke="var(--border-default)" strokeWidth="1.5"/>
           <rect x="12" y="14" width="30" height="40" rx="4" fill="var(--bg-overlay)" stroke="var(--border-default)" strokeWidth="1.5"/>
@@ -46,8 +22,6 @@ function EmptyPanel() {
           <circle cx="52" cy="46" r="14" fill="var(--bg-surface)" stroke="var(--accent)" strokeWidth="1.5"/>
           <ellipse cx="52" cy="46" rx="5.5" ry="14" fill="none" stroke="var(--accent-dim)" strokeWidth="1"/>
           <line x1="38" y1="46" x2="66" y2="46" stroke="var(--accent-dim)" strokeWidth="1"/>
-          <line x1="40" y1="39" x2="64" y2="39" stroke="var(--accent-dim)" strokeWidth="0.75" strokeDasharray="2 2"/>
-          <line x1="40" y1="53" x2="64" y2="53" stroke="var(--accent-dim)" strokeWidth="0.75" strokeDasharray="2 2"/>
         </svg>
       </div>
       <p className={styles.emptyTitle}>Selecione uma obra</p>
@@ -59,7 +33,6 @@ function EmptyPanel() {
   )
 }
 
-/** Skeleton para o painel enquanto carrega detalhes extras */
 function DetailsSkeleton() {
   return (
     <div className={styles.skeletonWrap} aria-hidden="true">
@@ -70,23 +43,45 @@ function DetailsSkeleton() {
   )
 }
 
-export function BookDetails({ book, onExploreMap }) {
+export function BookDetails({ book, onLanguagesChange }) {
   const { details, status: detailsStatus } = useBookDetails(book?.key)
+
+  const allLangs = book ? detectAllLanguages(book.languages) : []
+  const primaryLang = book ? detectPrimaryLanguage(book.languages) : null
+
+  // Multi-seleção: começa com o idioma principal selecionado
+  const [selected, setSelected] = useState(primaryLang ? [primaryLang] : [])
+
+  // Reseta ao trocar de livro
+  useEffect(() => {
+    const initial = primaryLang ? [primaryLang] : []
+    setSelected(initial)
+    onLanguagesChange?.(initial)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [book?.key])
+
+  function toggleLang(iso) {
+    setSelected((prev) => {
+      const next = prev.includes(iso)
+        ? prev.filter((l) => l !== iso)  // remove
+        : [...prev, iso]                  // adiciona
+      // Garante ao menos um selecionado
+      const final = next.length ? next : [iso]
+      onLanguagesChange?.(final)
+      return final
+    })
+  }
 
   if (!book) return <EmptyPanel />
 
-  const isoLang = getPrimaryLanguage(book.languages)
-  const langName = isoLang ? getLanguageName(isoLang) : null
   const coverLarge = getCoverUrl(book.coverId, 'L')
   const openLibraryUrl = `https://openlibrary.org${book.key}`
 
   return (
     <article className={`${styles.panel} stagger-item`} style={{ animationDelay: '0ms' }}>
 
-      {/* ── Seção superior: capa + info principal ── */}
+      {/* ── Capa + Info ─────────────────────────────────────── */}
       <div className={styles.topSection}>
-
-        {/* Capa grande */}
         <div className={styles.coverWrap}>
           {coverLarge ? (
             <img
@@ -110,7 +105,6 @@ export function BookDetails({ book, onExploreMap }) {
           </div>
         </div>
 
-        {/* Metadados principais */}
         <div className={styles.info}>
           <h2 className={styles.title}>{book.title}</h2>
 
@@ -136,58 +130,71 @@ export function BookDetails({ book, onExploreMap }) {
             )}
           </div>
 
-          {/* Separador */}
           <div className={styles.divider} />
 
-          {/* Idioma principal */}
+          {/* ── Seleção de idiomas ─────────────────────────── */}
           <div className={styles.langSection}>
             <p className={styles.langLabel}>
-              <Translate size={13} weight="bold" aria-hidden="true" />
-              Idioma principal
+              <Globe size={13} weight="bold" aria-hidden="true" />
+              {allLangs.length > 1
+                ? `Idiomas detectados — selecione para mapear`
+                : 'Idioma da obra'}
             </p>
 
-            {isoLang ? (
-              <div className={styles.langBadge}>
-                <span className={styles.langIso}>{isoLang.toUpperCase()}</span>
-                <span className={styles.langName}>{langName}</span>
-              </div>
+            {allLangs.length > 0 ? (
+              <>
+                <div className={styles.langPills} role="group" aria-label="Selecione idiomas para o mapa">
+                  {allLangs.map((iso) => {
+                    const isActive = selected.includes(iso)
+                    return (
+                      <button
+                        key={iso}
+                        type="button"
+                        className={`${styles.langPill} ${isActive ? styles.langPillActive : ''}`}
+                        onClick={() => toggleLang(iso)}
+                        aria-pressed={isActive}
+                        title={`${isActive ? 'Remover' : 'Adicionar'} ${getLanguageName(iso)}`}
+                      >
+                        <span className={styles.langPillIso}>{iso.toUpperCase()}</span>
+                        <span className={styles.langPillName}>{getLanguageName(iso)}</span>
+                        {isActive && <span className={styles.checkMark} aria-hidden="true">✓</span>}
+                      </button>
+                    )
+                  })}
+                </div>
+                {selected.length > 0 && (
+                  <p className={styles.selectionHint}>
+                    {selected.length === 1
+                      ? `Mostrando países com idioma: ${getLanguageName(selected[0])}`
+                      : `Mostrando países com ${selected.length} idiomas combinados`}
+                  </p>
+                )}
+              </>
             ) : (
-              <p className={styles.langUnknown}>Não informado</p>
+              <p className={styles.langUnknown}>Idioma não informado nesta edição</p>
             )}
           </div>
 
-          {/* Botão de ação */}
+          {/* ── Ações ─────────────────────────────────────── */}
           <div className={styles.actions}>
-            <button
-              className={`btn btn-primary ${styles.mapBtn}`}
-              onClick={() => onExploreMap(isoLang)}
-              disabled={!isoLang}
-              title={!isoLang ? 'Idioma não disponível para este livro' : undefined}
-            >
-              <Globe size={16} weight="bold" aria-hidden="true" />
-              Ver no mapa
-            </button>
-
             <a
               href={openLibraryUrl}
               target="_blank"
               rel="noreferrer"
               className={`btn btn-ghost ${styles.olLink}`}
             >
-              Open Library
               <ArrowSquareOut size={14} weight="bold" aria-hidden="true" />
+              Ver no Open Library
             </a>
           </div>
         </div>
       </div>
 
-      {/* ── Seção de detalhes extras (works API) ── */}
+      {/* ── Detalhes extras ──────────────────────────────────── */}
       {detailsStatus === 'loading' && <DetailsSkeleton />}
 
       {detailsStatus === 'success' && details && (
         <div className={styles.bottomSection}>
-
-          {/* Sinopse */}
           {details.description && (
             <div className={styles.descBlock}>
               <h3 className={styles.sectionLabel}>Sinopse</h3>
@@ -198,8 +205,6 @@ export function BookDetails({ book, onExploreMap }) {
               </p>
             </div>
           )}
-
-          {/* Tags de assuntos */}
           {details.subjects.length > 0 && (
             <div className={styles.subjectsBlock}>
               <h3 className={styles.sectionLabel}>Assuntos</h3>
@@ -210,8 +215,6 @@ export function BookDetails({ book, onExploreMap }) {
               </div>
             </div>
           )}
-
-          {/* Lugares */}
           {details.subjectPlaces.length > 0 && (
             <div className={styles.subjectsBlock}>
               <h3 className={styles.sectionLabel}>Lugares</h3>

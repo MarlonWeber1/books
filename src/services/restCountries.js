@@ -1,36 +1,92 @@
 /**
  * restCountries.js — Serviço para a REST Countries API v3.1
  * https://restcountries.com
+ *
+ * IMPORTANTE: A API aceita nomes por extenso em inglês ("/lang/english"),
+ * NÃO códigos ISO 639-1 ("/lang/en" → 404).
  */
 
 const BASE_URL = 'https://restcountries.com/v3.1'
-
-/** Campos solicitados — minimiza payload */
 const FIELDS = 'name,cca2,latlng,flags,capital,population,region'
 
 /**
- * Busca todos os países que possuem um determinado idioma.
- * @param {string} languageCode — Código ISO 639-1 (ex: "pt", "en")
- * @returns {Promise<Array>} Lista normalizada de países
+ * Mapa ISO 639-1 → nome em inglês aceito pela REST Countries API.
+ * Endpoint: GET /v3.1/lang/{languageName}
  */
-export async function fetchCountriesByLanguage(languageCode) {
-  if (!languageCode) return []
+const ISO_TO_API_NAME = {
+  en: 'english',
+  pt: 'portuguese',
+  es: 'spanish',
+  fr: 'french',
+  de: 'german',
+  it: 'italian',
+  ru: 'russian',
+  zh: 'chinese',
+  ja: 'japanese',
+  ar: 'arabic',
+  hi: 'hindi',
+  ko: 'korean',
+  nl: 'dutch',
+  pl: 'polish',
+  sv: 'swedish',
+  no: 'norwegian',
+  da: 'danish',
+  fi: 'finnish',
+  tr: 'turkish',
+  cs: 'czech',
+  hu: 'hungarian',
+  ro: 'romanian',
+  el: 'greek',
+  he: 'hebrew',
+  uk: 'ukrainian',
+  id: 'indonesian',
+  vi: 'vietnamese',
+  ms: 'malay',
+  ca: 'catalan',
+  bg: 'bulgarian',
+  hr: 'croatian',
+  sk: 'slovak',
+  sl: 'slovenian',
+  sr: 'serbian',
+  la: 'latin',
+}
+
+/**
+ * Converte código ISO 639-1 para o nome aceito pela API.
+ * @param {string} isoCode
+ * @returns {string|null}
+ */
+export function isoToApiName(isoCode) {
+  return ISO_TO_API_NAME[isoCode?.toLowerCase()] ?? null
+}
+
+/**
+ * Busca países que falam um dado idioma.
+ * @param {string} isoCode — Código ISO 639-1 (ex: "en", "pt")
+ * @returns {Promise<Array>}
+ */
+export async function fetchCountriesByLanguage(isoCode) {
+  if (!isoCode) return []
+
+  const apiName = isoToApiName(isoCode)
+  if (!apiName) {
+    console.warn(`[restCountries] Idioma não mapeado para API: ${isoCode}`)
+    return []
+  }
 
   const res = await fetch(
-    `${BASE_URL}/lang/${languageCode}?fields=${FIELDS}`,
+    `${BASE_URL}/lang/${apiName}?fields=${FIELDS}`,
     { signal: AbortSignal.timeout(10_000) }
   )
 
-  // 404 = idioma sem países correspondentes — não é erro
   if (res.status === 404) return []
 
   if (!res.ok) {
-    throw new Error(`REST Countries respondeu com status ${res.status}`)
+    throw new Error(`REST Countries retornou status ${res.status} para idioma "${apiName}"`)
   }
 
   const data = await res.json()
 
-  // Filtra somente países com coordenadas válidas
   return data
     .map(normalizeCountry)
     .filter((c) => c.latlng !== null)
@@ -38,8 +94,33 @@ export async function fetchCountriesByLanguage(languageCode) {
 }
 
 /**
- * Normaliza um objeto bruto da API para o formato interno da aplicação.
+ * Busca países para múltiplos idiomas em paralelo, removendo duplicatas.
+ * @param {string[]} isoCodes — Array de códigos ISO 639-1
+ * @returns {Promise<Array>}
  */
+export async function fetchCountriesByLanguages(isoCodes) {
+  if (!isoCodes?.length) return []
+
+  const results = await Promise.allSettled(
+    isoCodes.map((code) => fetchCountriesByLanguage(code))
+  )
+
+  const seen = new Set()
+  const countries = []
+
+  for (const result of results) {
+    if (result.status !== 'fulfilled') continue
+    for (const country of result.value) {
+      if (!seen.has(country.code)) {
+        seen.add(country.code)
+        countries.push(country)
+      }
+    }
+  }
+
+  return countries.sort((a, b) => a.name.localeCompare(b.name))
+}
+
 function normalizeCountry(c) {
   const latlng =
     Array.isArray(c.latlng) && c.latlng.length === 2 ? c.latlng : null

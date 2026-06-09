@@ -132,3 +132,53 @@ export function normalizeLanguageCode(lang) {
 export function getLanguageName(isoCode) {
   return LANGUAGE_NAMES[isoCode] ?? isoCode?.toUpperCase() ?? 'Desconhecido'
 }
+
+/**
+ * Ordem de prioridade para seleção do idioma principal.
+ * A Open Library retorna todos os idiomas de todas as edições, sem ordem
+ * garantida. Esta lista determina qual idioma é exibido como "principal".
+ */
+const LANGUAGE_PRIORITY = [
+  'en', 'pt', 'es', 'fr', 'de', 'it', 'ru', 'zh',
+  'ja', 'ar', 'hi', 'ko', 'nl', 'pl', 'sv', 'no',
+  'da', 'fi', 'tr', 'cs', 'hu', 'ro', 'el', 'he',
+  'uk', 'id', 'vi', 'ms', 'ca', 'bg', 'hr', 'sk',
+]
+
+/**
+ * Extrai todos os idiomas únicos de um array de códigos brutos,
+ * normalizados para ISO 639-1, sem duplicatas.
+ * @param {Array} languages — Array de strings/objetos da Open Library
+ * @returns {string[]} Códigos ISO 639-1 únicos e válidos
+ */
+export function detectAllLanguages(languages) {
+  if (!Array.isArray(languages) || !languages.length) return []
+  const seen = new Set()
+  const result = []
+  for (const lang of languages) {
+    const iso = normalizeLanguageCode(lang)
+    if (iso && !seen.has(iso)) {
+      seen.add(iso)
+      result.push(iso)
+    }
+  }
+  return result
+}
+
+/**
+ * Detecta o idioma principal de uma obra usando ordem de prioridade.
+ * Evita o problema de edições em idiomas minoritários aparecerem primeiro
+ * na lista da Open Library (ex: Harry Potter mostrando turco ao invés de inglês).
+ *
+ * @param {Array} languages — Array de strings/objetos da Open Library
+ * @returns {string|null} Código ISO 639-1 do idioma principal, ou null
+ */
+export function detectPrimaryLanguage(languages) {
+  const all = detectAllLanguages(languages)
+  if (!all.length) return null
+  for (const priority of LANGUAGE_PRIORITY) {
+    if (all.includes(priority)) return priority
+  }
+  return all[0] // fallback: primeiro idioma detectável
+}
+

@@ -12,11 +12,10 @@ import styles from './App.module.css'
  *
  * Fluxo de dados:
  * 1. Usuário digita → useBookSearch dispara busca debounced
- * 2. Usuário clica em livro → selectedBook é definido
- * 3. BookDetails exibe título, autor, idioma, sinopse
- * 4. Usuário clica "Ver no mapa" → exploreLanguage é definido
- * 5. useCountries reage ao exploreLanguage → busca países
- * 6. WorldMap renderiza marcadores no Leaflet
+ * 2. Usuário clica em livro → selectedBook definido
+ * 3. BookDetails detecta idiomas e seleciona o principal por padrão
+ * 4. useCountries reage ao array de idiomas selecionados
+ * 5. WorldMap renderiza marcadores dos países retornados
  */
 function App() {
   const {
@@ -30,24 +29,20 @@ function App() {
     clear,
   } = useBookSearch()
 
-  // Código ISO 639-1 do idioma a explorar no mapa
-  const [exploreLanguage, setExploreLanguage] = useState(null)
+  // Array de códigos ISO dos idiomas atualmente selecionados no BookDetails
+  const [selectedLanguages, setSelectedLanguages] = useState([])
 
-  // Hook reactivo: dispara fetchCountriesByLanguage quando exploreLanguage muda
-  const { countries, status: mapStatus, error: mapError } = useCountries(exploreLanguage)
-
-  function handleExploreMap(isoCode) {
-    setExploreLanguage(isoCode ?? null)
-  }
+  // Reage automaticamente à mudança de idiomas selecionados
+  const { countries, status: mapStatus, error: mapError } = useCountries(selectedLanguages)
 
   function handleSelectBook(book) {
     selectBook(book)
-    setExploreLanguage(null) // limpa mapa ao trocar de livro
+    setSelectedLanguages([]) // reseta — BookDetails vai notificar com o primário
   }
 
   return (
     <div className={styles.root}>
-      {/* ── Header ─────────────────────────────────────────────── */}
+      {/* ── Header ─────────────────────────────────────────── */}
       <header className={styles.header}>
         <div className="container">
           <div className={styles.headerInner}>
@@ -69,7 +64,7 @@ function App() {
         </div>
       </header>
 
-      {/* ── Main ───────────────────────────────────────────────── */}
+      {/* ── Main ───────────────────────────────────────────── */}
       <main className={styles.main}>
         <div className="container">
           <div className={styles.layout}>
@@ -96,16 +91,16 @@ function App() {
             <section className={styles.panelRight}>
               <BookDetails
                 book={selectedBook}
-                onExploreMap={handleExploreMap}
+                onLanguagesChange={setSelectedLanguages}
               />
 
-              {/* Mapa: só exibe quando houver idioma a explorar */}
-              {exploreLanguage && (
+              {/* Mapa: visível sempre que um livro está selecionado */}
+              {selectedBook && (
                 <WorldMap
                   countries={countries}
                   status={mapStatus}
                   error={mapError}
-                  languageCode={exploreLanguage}
+                  languageCodes={selectedLanguages}
                   bookTitle={selectedBook?.title}
                 />
               )}
@@ -115,7 +110,7 @@ function App() {
         </div>
       </main>
 
-      {/* ── Footer ─────────────────────────────────────────────── */}
+      {/* ── Footer ─────────────────────────────────────────── */}
       <footer className={styles.footer}>
         <div className="container">
           <p>

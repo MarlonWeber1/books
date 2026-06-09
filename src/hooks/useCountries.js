@@ -1,20 +1,29 @@
 /**
- * useCountries.js — Hook para gerenciar o estado do mapa de países
- *
- * Dispara a requisição automaticamente quando o código de idioma muda.
- * Usa cleanup de efeito para evitar race conditions.
+ * useCountries.js — Hook para buscar países por um ou múltiplos idiomas
  */
 
-import { useState, useEffect, useCallback } from 'react'
-import { fetchCountriesByLanguage } from '../services/restCountries'
+import { useState, useEffect } from 'react'
+import { fetchCountriesByLanguages } from '../services/restCountries'
 
-export function useCountries(languageCode) {
+/**
+ * @param {string|string[]|null} languageCodes — ISO 639-1 code(s)
+ */
+export function useCountries(languageCodes) {
   const [countries, setCountries] = useState([])
-  const [status, setStatus] = useState('idle') // 'idle'|'loading'|'success'|'error'
+  const [status, setStatus] = useState('idle')
   const [error, setError] = useState(null)
 
+  // Normaliza para array e cria chave estável para o useEffect
+  const codes = Array.isArray(languageCodes)
+    ? languageCodes
+    : languageCodes
+    ? [languageCodes]
+    : []
+
+  const codeKey = codes.join(',')
+
   useEffect(() => {
-    if (!languageCode) {
+    if (!codeKey) {
       setCountries([])
       setStatus('idle')
       setError(null)
@@ -26,7 +35,7 @@ export function useCountries(languageCode) {
     setCountries([])
     setError(null)
 
-    fetchCountriesByLanguage(languageCode)
+    fetchCountriesByLanguages(codes)
       .then((data) => {
         if (cancelled) return
         setCountries(data)
@@ -39,13 +48,8 @@ export function useCountries(languageCode) {
       })
 
     return () => { cancelled = true }
-  }, [languageCode])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [codeKey])
 
-  const reset = useCallback(() => {
-    setCountries([])
-    setStatus('idle')
-    setError(null)
-  }, [])
-
-  return { countries, status, error, reset }
+  return { countries, status, error }
 }

@@ -112,17 +112,21 @@ function ErrorState({ message }) {
 }
 
 // ── Componente principal ────────────────────────────────────────────────────
-export function WorldMap({ countries, status, error, languageCode, bookTitle }) {
+export function WorldMap({ countries, status, error, languageCodes, bookTitle }) {
   const sectionRef = useRef(null)
-
+  const codes = Array.isArray(languageCodes) ? languageCodes : languageCodes ? [languageCodes] : []
   const showMap = status === 'success' && countries.length > 0
+
+  const langLabel = codes.length > 0
+    ? codes.map(c => c.toUpperCase()).join(' + ')
+    : ''
 
   return (
     <section
       ref={sectionRef}
       className={`${styles.wrapper} stagger-item`}
       style={{ animationDelay: '80ms' }}
-      aria-label={`Mapa: países com idioma ${languageCode?.toUpperCase() ?? ''}`}
+      aria-label={`Mapa de países por idioma`}
     >
       {/* Cabeçalho */}
       <div className={styles.header}>
@@ -131,7 +135,8 @@ export function WorldMap({ countries, status, error, languageCode, bookTitle }) 
           <span className={styles.headerTitle}>
             {bookTitle
               ? `"${bookTitle.length > 28 ? bookTitle.slice(0, 28) + '…' : bookTitle}"`
-              : 'Distribuição geográfica do idioma'}
+              : 'Distribuição geográfica'}
+            {langLabel ? ` · ${langLabel}` : ''}
           </span>
         </div>
         {status === 'success' && (
@@ -149,12 +154,12 @@ export function WorldMap({ countries, status, error, languageCode, bookTitle }) 
 
         {(status === 'idle') && <IdleState />}
         {status === 'loading' && <MapSkeleton />}
-        {status === 'empty' && <EmptyState languageCode={languageCode} />}
+        {status === 'empty' && <EmptyState languageCode={langLabel} />}
         {status === 'error' && <ErrorState message={error} />}
 
         {showMap && (
           <MapContainer
-            key={languageCode}            /* remonta ao mudar idioma */
+            key={codes.join(',')}         /* remonta ao mudar seleção */
             center={[20, 10]}
             zoom={2}
             style={{ height: MAP_HEIGHT, width: '100%' }}
