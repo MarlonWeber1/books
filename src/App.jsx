@@ -1,20 +1,22 @@
 import { useState } from 'react'
 import { useBookSearch } from './hooks/useBookSearch'
+import { useCountries } from './hooks/useCountries'
 import { SearchBar } from './components/SearchBar'
 import { BookList } from './components/BookList'
 import { BookDetails } from './components/BookDetails'
+import { WorldMap } from './components/WorldMap'
 import styles from './App.module.css'
 
 /**
  * App — Shell principal da aplicação Biblioatlas.
  *
- * Estado gerenciado aqui:
- * - useBookSearch: query, results, selectedBook, status, error
- * - exploreLanguage: código ISO 639-1 do idioma a mapear (Commit 4)
- *
- * Layout split-screen:
- * - Coluna esquerda (380px): SearchBar + BookList
- * - Coluna direita (1fr)  : BookDetails + WorldMap
+ * Fluxo de dados:
+ * 1. Usuário digita → useBookSearch dispara busca debounced
+ * 2. Usuário clica em livro → selectedBook é definido
+ * 3. BookDetails exibe título, autor, idioma, sinopse
+ * 4. Usuário clica "Ver no mapa" → exploreLanguage é definido
+ * 5. useCountries reage ao exploreLanguage → busca países
+ * 6. WorldMap renderiza marcadores no Leaflet
  */
 function App() {
   const {
@@ -28,23 +30,24 @@ function App() {
     clear,
   } = useBookSearch()
 
-  // Idioma a ser explorado no mapa (preenchido pelo botão "Ver no mapa")
+  // Código ISO 639-1 do idioma a explorar no mapa
   const [exploreLanguage, setExploreLanguage] = useState(null)
 
+  // Hook reactivo: dispara fetchCountriesByLanguage quando exploreLanguage muda
+  const { countries, status: mapStatus, error: mapError } = useCountries(exploreLanguage)
+
   function handleExploreMap(isoCode) {
-    setExploreLanguage(isoCode)
-    // WorldMap será adicionado no Commit 4
+    setExploreLanguage(isoCode ?? null)
   }
 
-  // Ao trocar de livro selecionado, limpa o mapa anterior
   function handleSelectBook(book) {
     selectBook(book)
-    setExploreLanguage(null)
+    setExploreLanguage(null) // limpa mapa ao trocar de livro
   }
 
   return (
     <div className={styles.root}>
-      {/* ── Header ─────────────────────────────────── */}
+      {/* ── Header ─────────────────────────────────────────────── */}
       <header className={styles.header}>
         <div className="container">
           <div className={styles.headerInner}>
@@ -66,7 +69,7 @@ function App() {
         </div>
       </header>
 
-      {/* ── Main ───────────────────────────────────── */}
+      {/* ── Main ───────────────────────────────────────────────── */}
       <main className={styles.main}>
         <div className="container">
           <div className={styles.layout}>
@@ -95,19 +98,16 @@ function App() {
                 book={selectedBook}
                 onExploreMap={handleExploreMap}
               />
-              {/* WorldMap adicionado no Commit 4 */}
+
+              {/* Mapa: só exibe quando houver idioma a explorar */}
               {exploreLanguage && (
-                <div className={styles.mapPlaceholder}>
-                  <span className={styles.placeholderLabel}>Mapa</span>
-                  <p>
-                    Buscando países com idioma{' '}
-                    <strong style={{ color: 'var(--accent)' }}>
-                      {exploreLanguage.toUpperCase()}
-                    </strong>
-                    …
-                  </p>
-                  <p>WorldMap adicionado no Commit 4</p>
-                </div>
+                <WorldMap
+                  countries={countries}
+                  status={mapStatus}
+                  error={mapError}
+                  languageCode={exploreLanguage}
+                  bookTitle={selectedBook?.title}
+                />
               )}
             </section>
 
@@ -115,7 +115,7 @@ function App() {
         </div>
       </main>
 
-      {/* ── Footer ─────────────────────────────────── */}
+      {/* ── Footer ─────────────────────────────────────────────── */}
       <footer className={styles.footer}>
         <div className="container">
           <p>

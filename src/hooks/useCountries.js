@@ -1,27 +1,45 @@
 /**
  * useCountries.js — Hook para gerenciar o estado do mapa de países
- * Implementado no Commit 4 (feat-map-integration)
+ *
+ * Dispara a requisição automaticamente quando o código de idioma muda.
+ * Usa cleanup de efeito para evitar race conditions.
  */
 
-import { useState, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import { fetchCountriesByLanguage } from '../services/restCountries'
 
-/**
- * @returns {{
- *   countries: Array,
- *   status: 'idle'|'loading'|'success'|'error',
- *   error: string|null,
- *   loadCountries: (languageCode: string) => void,
- *   reset: () => void,
- * }}
- */
-export function useCountries() {
+export function useCountries(languageCode) {
   const [countries, setCountries] = useState([])
-  const [status, setStatus] = useState('idle')
+  const [status, setStatus] = useState('idle') // 'idle'|'loading'|'success'|'error'
   const [error, setError] = useState(null)
 
-  const loadCountries = useCallback(async (languageCode) => {
-    // Implementado no Commit 4
-  }, [])
+  useEffect(() => {
+    if (!languageCode) {
+      setCountries([])
+      setStatus('idle')
+      setError(null)
+      return
+    }
+
+    let cancelled = false
+    setStatus('loading')
+    setCountries([])
+    setError(null)
+
+    fetchCountriesByLanguage(languageCode)
+      .then((data) => {
+        if (cancelled) return
+        setCountries(data)
+        setStatus(data.length === 0 ? 'empty' : 'success')
+      })
+      .catch((err) => {
+        if (cancelled) return
+        setError(err.message ?? 'Erro ao buscar países.')
+        setStatus('error')
+      })
+
+    return () => { cancelled = true }
+  }, [languageCode])
 
   const reset = useCallback(() => {
     setCountries([])
@@ -29,5 +47,5 @@ export function useCountries() {
     setError(null)
   }, [])
 
-  return { countries, status, error, loadCountries, reset }
+  return { countries, status, error, reset }
 }
