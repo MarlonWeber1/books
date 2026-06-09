@@ -1,0 +1,146 @@
+/* SearchBar.module.css */
+
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--ink-secondary);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+/* --- Input Row ----------------------------------------- */
+.inputRow {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input {
+  width: 100%;
+  padding: var(--space-3) var(--space-10) var(--space-3) var(--space-10);
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  color: var(--ink-primary);
+  font-size: 0.95rem;
+  font-family: var(--font-sans);
+  transition:
+    border-color 180ms var(--ease-out),
+    box-shadow 180ms var(--ease-out),
+    background-color 180ms var(--ease-out);
+  outline: none;
+  /* Remove estilo nativo do type="search" */
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.input::placeholder {
+  color: var(--ink-muted);
+}
+
+.input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+  background-color: var(--bg-surface);
+}
+
+/* --- Ícone esquerdo ------------------------------------ */
+.iconLeft {
+  position: absolute;
+  left: var(--space-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-muted);
+  pointer-events: none;
+  transition: color 160ms var(--ease-out);
+}
+
+.input:focus ~ .iconLeft,
+.inputRow:focus-within .iconLeft {
+  color: var(--accent);
+}
+
+/* Spinner de loading */
+.spinner {
+  animation: spin 700ms linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* --- Botão limpar -------------------------------------- */
+.clearBtn {
+  position: absolute;
+  right: var(--space-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-full);
+  border: none;
+  background: transparent;
+  color: var(--ink-muted);
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.7);
+  transition:
+    opacity 160ms var(--ease-out),
+    transform 160ms var(--ease-out),
+    background-color 160ms var(--ease-out),
+    color 160ms var(--ease-out);
+}
+
+.clearVisible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: scale(1);
+}
+
+.clearBtn:hover {
+  background-color: var(--bg-overlay);
+  color: var(--ink-primary);
+}
+
+.clearBtn:active {
+  transform: scale(0.9);
+}
+
+/* --- Hint --------------------------------------------- */
+.hint {
+  font-size: 0.75rem;
+  color: var(--ink-disabled);
+  line-height: 1.4;
+}
+
+.hint kbd {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  padding: 1px 5px;
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  background: var(--bg-elevated);
+  color: var(--ink-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: none;
+  }
+  .clearBtn {
+    transition: none;
+  }
+}

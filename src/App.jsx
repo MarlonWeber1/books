@@ -1,13 +1,27 @@
+import { useBookSearch } from './hooks/useBookSearch'
+import { SearchBar } from './components/SearchBar'
+import { BookList } from './components/BookList'
 import styles from './App.module.css'
 
 /**
  * App — Shell principal da aplicação Biblioatlas.
- * O layout split-screen é montado aqui:
- *   - Coluna esquerda: SearchBar + BookList
- *   - Coluna direita: BookDetails + WorldMap
- * Os componentes de feature serão adicionados nos commits subsequentes.
+ *
+ * Layout split-screen:
+ * - Coluna esquerda (380px): SearchBar + BookList
+ * - Coluna direita (1fr): BookDetails + WorldMap (Commits 3 e 4)
  */
 function App() {
+  const {
+    query,
+    results,
+    selectedBook,
+    status,
+    error,
+    search,
+    selectBook,
+    clear,
+  } = useBookSearch()
+
   return (
     <div className={styles.root}>
       {/* Header */}
@@ -36,21 +50,43 @@ function App() {
       <main className={styles.main}>
         <div className="container">
           <div className={styles.layout}>
-            {/* Painel esquerdo — busca e listagem */}
+
+            {/* Painel esquerdo: busca + listagem */}
             <aside className={styles.panelLeft}>
-              <div className={styles.placeholderPanel}>
-                <span className={styles.placeholderLabel}>Busca + Resultados</span>
-                <p>Componentes adicionados no Commit 2</p>
-              </div>
+              <SearchBar
+                value={query}
+                onSearch={search}
+                onClear={clear}
+                isLoading={status === 'loading'}
+              />
+              <BookList
+                results={results}
+                status={status}
+                error={error}
+                query={query}
+                selectedBook={selectedBook}
+                onSelect={selectBook}
+              />
             </aside>
 
-            {/* Painel direito — detalhes e mapa */}
+            {/* Painel direito: detalhes + mapa (Commits 3 e 4) */}
             <section className={styles.panelRight}>
-              <div className={styles.placeholderPanel}>
-                <span className={styles.placeholderLabel}>Detalhes + Mapa</span>
-                <p>Componentes adicionados nos Commits 3 e 4</p>
-              </div>
+              {selectedBook ? (
+                <div className={styles.placeholderPanel}>
+                  <span className={styles.placeholderLabel}>Selecionado</span>
+                  <p style={{ color: 'var(--ink-primary)', fontWeight: 500 }}>
+                    {selectedBook.title}
+                  </p>
+                  <p>Detalhes e mapa adicionados nos Commits 3 e 4</p>
+                </div>
+              ) : (
+                <div className={styles.placeholderPanel}>
+                  <span className={styles.placeholderLabel}>Detalhes + Mapa</span>
+                  <p>Selecione um livro para ver os detalhes</p>
+                </div>
+              )}
             </section>
+
           </div>
         </div>
       </main>

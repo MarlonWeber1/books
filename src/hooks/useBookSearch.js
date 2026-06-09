@@ -1,22 +1,18 @@
 /**
- * useBookSearch.js — Hook para gerenciar o estado da busca de livros
- * Implementado no Commit 2 (feat-book-search)
+ * useBookSearch.js — Hook de gerenciamento de estado da busca
+ *
+ * Responsabilidades:
+ * - Debounce de 400ms antes de disparar a requisição
+ * - Cancelamento de requisições obsoletas via AbortController
+ * - Máquina de estados: idle → loading → success | error
+ * - Seleção de livro para exibição nos painéis de detalhes/mapa
  */
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
+import { searchBooks } from '../services/openLibrary'
 
-/**
- * @returns {{
- *   query: string,
- *   results: Array,
- *   selectedBook: Object|null,
- *   status: 'idle'|'loading'|'success'|'error',
- *   error: string|null,
- *   search: (q: string) => void,
- *   selectBook: (book: Object) => void,
- *   clearSelection: () => void,
- * }}
- */
+const DEBOUNCE_MS = 400
+
 export function useBookSearch() {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState([])
@@ -24,8 +20,41 @@ export function useBookSearch() {
   const [status, setStatus] = useState('idle') // 'idle' | 'loading' | 'success' | 'error'
   const [error, setError] = useState(null)
 
-  const search = useCallback(async (q) => {
-    // Implementado no Commit 2
+  const debounceTimer = useRef(null)
+
+  /**
+   * Inicia uma busca debounced.
+   * Cancela a busca anterior se o usuário ainda estiver digitando.
+   */
+  const search = useCallback((q) => {
+    setQuery(q)
+    clearTimeout(debounceTimer.current)
+
+    if (!q.trim()) {
+      setResults([])
+      setStatus('idle')
+      setError(null)
+      return
+    }
+
+    setStatus('loading')
+
+    debounceTimer.current = setTimeout(async () => {
+      try {
+        const books = await searchBooks(q)
+        setResults(books)
+        setStatus('success')
+        setError(null)
+        // Limpa seleção anterior se nova busca foi realizada
+        setSelectedBook(null)
+      } catch (err) {
+        // Ignora erros de abort (usuário digitou mais rápido)
+        if (err.name === 'AbortError' || err.name === 'TimeoutError') return
+        setError(err.message ?? 'Erro ao buscar livros. Tente novamente.')
+        setStatus('error')
+        setResults([])
+      }
+    }, DEBOUNCE_MS)
   }, [])
 
   const selectBook = useCallback((book) => {
@@ -34,6 +63,15 @@ export function useBookSearch() {
 
   const clearSelection = useCallback(() => {
     setSelectedBook(null)
+  }, [])
+
+  const clear = useCallback(() => {
+    clearTimeout(debounceTimer.current)
+    setQuery('')
+    setResults([])
+    setSelectedBook(null)
+    setStatus('idle')
+    setError(null)
   }, [])
 
   return {
@@ -45,5 +83,6 @@ export function useBookSearch() {
     search,
     selectBook,
     clearSelection,
+    clear,
   }
 }

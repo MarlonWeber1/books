@@ -92,12 +92,36 @@ export const LANGUAGE_NAMES = {
 
 /**
  * Normaliza um código de idioma de qualquer formato para ISO 639-1.
- * @param {string|Object} lang — Ex: "/languages/eng", "eng", "en", { key: "/languages/por" }
+ * Suporta:
+ *  - Objeto Open Library:   { key: "/languages/eng" }
+ *  - String MARC path:      "/languages/eng"
+ *  - Código MARC direto:    "eng"
+ *  - Código ISO 639-1:      "en"
+ * @param {string|Object} lang
  * @returns {string|null} Código ISO 639-1 ou null se não reconhecido
  */
 export function normalizeLanguageCode(lang) {
-  // Implementado no Commit 3
-  return null
+  if (!lang) return null
+
+  // Extrai a string do objeto { key: "/languages/eng" }
+  const raw = typeof lang === 'object' ? lang.key : lang
+
+  if (typeof raw !== 'string') return null
+
+  // Extrai o código do path "/languages/eng" → "eng"
+  const code = raw.includes('/')
+    ? raw.split('/').filter(Boolean).pop()
+    : raw
+
+  const lower = code.toLowerCase()
+
+  // Já é ISO 639-1 (2 letras)?
+  if (lower.length === 2) {
+    return Object.values(MARC_TO_ISO).includes(lower) ? lower : null
+  }
+
+  // Converte MARC21 (3 letras) → ISO 639-1
+  return MARC_TO_ISO[lower] ?? null
 }
 
 /**

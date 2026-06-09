@@ -1,0 +1,182 @@
+/* BookCard.module.css */
+
+.card {
+  display: grid;
+  grid-template-columns: 56px 1fr auto;
+  gap: var(--space-3);
+  align-items: start;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  background-color: var(--bg-surface);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition:
+    border-color 180ms var(--ease-out),
+    background-color 180ms var(--ease-out),
+    transform 160ms var(--ease-out),
+    box-shadow 180ms var(--ease-out);
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+}
+
+.card::before {
+  /* Spotlight border effect no hover */
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  opacity: 0;
+  background: radial-gradient(
+    400px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    rgba(196, 169, 109, 0.06),
+    transparent 70%
+  );
+  transition: opacity 200ms var(--ease-out);
+  pointer-events: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .card:hover {
+    border-color: var(--border-default);
+    background-color: var(--bg-elevated);
+  }
+
+  .card:hover::before {
+    opacity: 1;
+  }
+}
+
+.card:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.card:active {
+  transform: scale(0.98);
+}
+
+/* Estado selecionado */
+.selected {
+  border-color: var(--accent-dim) !important;
+  background-color: var(--accent-surface) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+/* --- Capa ----------------------------------------------- */
+.cover {
+  width: 56px;
+  height: 78px;
+  border-radius: 4px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background-color: var(--bg-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.coverImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+}
+
+.coverFallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-disabled);
+  background-color: var(--bg-overlay);
+}
+
+/* --- Metadados ----------------------------------------- */
+.meta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+  padding-top: 2px;
+}
+
+.title {
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--ink-primary);
+  letter-spacing: -0.01em;
+  line-height: 1.35;
+  /* Truncar em 2 linhas */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.metaRow {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.78rem;
+  color: var(--ink-secondary);
+  line-height: 1.3;
+  /* Truncar em 1 linha */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.metaRow svg {
+  flex-shrink: 0;
+  color: var(--ink-muted);
+}
+
+/* --- Tags ---------------------------------------------- */
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin-top: var(--space-1);
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.7rem;
+  font-family: var(--font-mono);
+  color: var(--ink-muted);
+  background-color: var(--bg-overlay);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-full);
+  padding: 2px 8px;
+  line-height: 1.5;
+  letter-spacing: 0.02em;
+}
+
+.editions {
+  font-size: 0.7rem;
+  color: var(--ink-disabled);
+  margin-top: 2px;
+}
+
+/* --- Indicador de seleção ----------------------------- */
+.selectedDot {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 60%;
+  border-radius: 0 2px 2px 0;
+  background-color: var(--accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    transition: none;
+  }
+}
