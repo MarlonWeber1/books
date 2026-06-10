@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { useBookSearch } from './hooks/useBookSearch'
 import { useCountries } from './hooks/useCountries'
+import { useTheme } from './hooks/useTheme'
 import { SearchBar } from './components/SearchBar'
 import { BookList } from './components/BookList'
 import { BookDetails } from './components/BookDetails'
 import { WorldMap } from './components/WorldMap'
 import { OfflineBanner } from './components/OfflineBanner'
+import { ThemeToggle } from './components/ThemeToggle'
 import { detectPrimaryLanguage } from './utils/languageMapper'
 import styles from './App.module.css'
 
@@ -25,6 +27,8 @@ import styles from './App.module.css'
  * - aria-live: regiões anunciam mudanças para leitores de tela
  */
 function App() {
+  const { isDark, toggle } = useTheme()
+
   const {
     query,
     results,
@@ -57,18 +61,22 @@ function App() {
           <div className={styles.headerInner}>
             <div className={styles.brand}>
               <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-                <rect x="5" y="4" width="13" height="18" rx="2" fill="#e8d5b0" stroke="#c4a96d" strokeWidth="1"/>
-                <rect x="7" y="4" width="13" height="18" rx="2" fill="#f0e6c8" stroke="#c4a96d" strokeWidth="1"/>
-                <line x1="10" y1="10" x2="17" y2="10" stroke="#9b8060" strokeWidth="1.5" strokeLinecap="round"/>
-                <line x1="10" y1="13" x2="17" y2="13" stroke="#9b8060" strokeWidth="1.5" strokeLinecap="round"/>
-                <circle cx="22" cy="22" r="7" fill="#0e0f11" stroke="#c4a96d" strokeWidth="1.5"/>
-                <path d="M22 19 L22 22 L24 24" stroke="#c4a96d" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <rect x="5" y="4" width="13" height="18" rx="2" fill="var(--bg-elevated)" stroke="var(--accent)" strokeWidth="1"/>
+                <rect x="7" y="4" width="13" height="18" rx="2" fill="var(--bg-surface)" stroke="var(--accent)" strokeWidth="1"/>
+                <line x1="10" y1="10" x2="17" y2="10" stroke="var(--ink-secondary)" strokeWidth="1.5" strokeLinecap="round"/>
+                <line x1="10" y1="13" x2="17" y2="13" stroke="var(--ink-secondary)" strokeWidth="1.5" strokeLinecap="round"/>
+                <circle cx="22" cy="22" r="7" fill="var(--bg-base)" stroke="var(--accent)" strokeWidth="1.5"/>
+                <path d="M22 19 L22 22 L24 24" stroke="var(--accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
               <span className={styles.brandName}>Biblioatlas</span>
             </div>
-            <p className={styles.tagline}>
-              Pesquise uma obra e veja os países onde seu idioma é falado
-            </p>
+            
+            <div className={styles.headerActions}>
+              <p className={styles.tagline}>
+                Pesquise uma obra e veja os países onde seu idioma é falado
+              </p>
+              <ThemeToggle isDark={isDark} onToggle={toggle} />
+            </div>
           </div>
         </div>
       </header>

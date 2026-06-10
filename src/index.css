@@ -81,6 +81,54 @@
   --z-tooltip: 90;
 }
 
+/* ─── Light theme ─────────────────────────────────────────────────────────────
+   Paleta warm-neutral — off-white com tinte identitário (não o clichê cream/sand).
+   Accent dourado escurecido para contraste ≥ 4.5:1 no fundo claro.
+   ──────────────────────────────────────────────────────────────────────────── */
+[data-theme='light'] {
+  --bg-base:        #f5f2ed;
+  --bg-surface:     #ede9e2;
+  --bg-elevated:    #e4dfd6;
+  --bg-overlay:     #d9d3c9;
+
+  --border-subtle:  rgba(0, 0, 0, 0.05);
+  --border-default: rgba(0, 0, 0, 0.10);
+  --border-strong:  rgba(0, 0, 0, 0.18);
+
+  --ink-primary:    #1a1714;   /* quase preto — contraste 14:1 no fundo */
+  --ink-secondary:  #4a4540;
+  --ink-muted:      #7a7268;
+  --ink-disabled:   #b0a99f;
+
+  /* Accent: ouro mais escuro para contraste mínimo 4.5:1 no claro */
+  --accent:         #7a5e2a;
+  --accent-dim:     #5a4520;
+  --accent-glow:    rgba(122, 94, 42, 0.14);
+  --accent-surface: rgba(122, 94, 42, 0.08);
+
+  --error:          #b04040;
+  --error-surface:  rgba(176, 64, 64, 0.08);
+  --success:        #3a7a54;
+
+  --shadow-sm:  0 1px 3px rgba(0, 0, 0, 0.10), 0 1px 2px rgba(0, 0, 0, 0.07);
+  --shadow-md:  0 4px 12px rgba(0, 0, 0, 0.13), 0 2px 4px rgba(0, 0, 0, 0.08);
+  --shadow-lg:  0 12px 32px rgba(0, 0, 0, 0.16), 0 4px 8px rgba(0, 0, 0, 0.10);
+}
+
+/* Transição global suave ao alternar tema — apenas propriedades de cor */
+html.theme-transitioning,
+html.theme-transitioning *,
+html.theme-transitioning *::before,
+html.theme-transitioning *::after {
+  transition:
+    background-color 220ms cubic-bezier(0.23, 1, 0.32, 1),
+    border-color     220ms cubic-bezier(0.23, 1, 0.32, 1),
+    color            180ms cubic-bezier(0.23, 1, 0.32, 1),
+    box-shadow       220ms cubic-bezier(0.23, 1, 0.32, 1),
+    fill             220ms cubic-bezier(0.23, 1, 0.32, 1),
+    stroke           220ms cubic-bezier(0.23, 1, 0.32, 1) !important;
+}
+
 html {
   font-size: 16px;
   scroll-behavior: smooth;
@@ -328,9 +376,9 @@ h3 { font-size: clamp(1rem, 2vw, 1.25rem); }
   background: var(--ink-muted);
 }
 
-/* --- Leaflet overrides ------------------------------------ */
+/* --- Leaflet overrides — adaptados por tema --------------- */
 .leaflet-container {
-  background: #0e0f11 !important;
+  background: var(--bg-base) !important;
   font-family: 'Outfit', system-ui, sans-serif !important;
 }
 
@@ -340,14 +388,23 @@ h3 { font-size: clamp(1rem, 2vw, 1.25rem); }
   font-size: 0.68rem !important;
 }
 
+[data-theme='light'] .leaflet-control-attribution {
+  background: rgba(245, 242, 237, 0.88) !important;
+  color: #7a7268 !important;
+}
+
 .leaflet-control-attribution a {
   color: #c4a96d !important;
 }
 
+[data-theme='light'] .leaflet-control-attribution a {
+  color: #7a5e2a !important;
+}
+
 .leaflet-control-zoom a {
-  background-color: #1e2028 !important;
-  color: #f0ece4 !important;
-  border-color: rgba(255,255,255,0.10) !important;
+  background-color: var(--bg-elevated) !important;
+  color: var(--ink-primary) !important;
+  border-color: var(--border-default) !important;
   width: 28px !important;
   height: 28px !important;
   line-height: 28px !important;
@@ -355,15 +412,15 @@ h3 { font-size: clamp(1rem, 2vw, 1.25rem); }
 }
 
 .leaflet-control-zoom a:hover {
-  background-color: #262933 !important;
+  background-color: var(--bg-overlay) !important;
 }
 
-/* Popup dark mode */
+/* Popup adaptado ao tema */
 .leaflet-popup-content-wrapper {
-  background-color: #1e2028 !important;
-  border: 1px solid rgba(255,255,255,0.10) !important;
+  background-color: var(--bg-elevated) !important;
+  border: 1px solid var(--border-default) !important;
   border-radius: 10px !important;
-  box-shadow: 0 12px 32px rgba(0,0,0,0.55), 0 4px 8px rgba(0,0,0,0.35) !important;
+  box-shadow: var(--shadow-lg) !important;
   padding: 0 !important;
   overflow: hidden;
 }

@@ -47,6 +47,22 @@
   line-height: 1.4;
 }
 
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .headerActions {
+    gap: var(--space-3);
+  }
+  .tagline {
+    display: none; /* Oculta a tagline em mobile para economizar espaço e deixar apenas logo + tema */
+  }
+}
+
 @media (max-width: 600px) {
   .tagline {
     display: none;
