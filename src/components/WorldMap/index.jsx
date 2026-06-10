@@ -16,18 +16,52 @@ import styles from './WorldMap.module.css'
 
 const MAP_HEIGHT = 380
 
-// ── Ícone customizado (divIcon — evita bug de paths no Vite) ────────────────
-const markerIcon = L.divIcon({
-  className: '',
-  html: `<span style="
-    display:block;width:14px;height:14px;border-radius:50%;
-    background:#c4a96d;border:2.5px solid #8a7148;
-    box-shadow:0 0 0 5px rgba(196,169,109,0.20);
-  "></span>`,
-  iconSize: [14, 14],
-  iconAnchor: [7, 7],
-  popupAnchor: [0, -12],
-})
+// ── Ícone de bandeira por país ──────────────────────────────────────────────
+function createFlagIcon(flagUrl, countryName) {
+  if (!flagUrl) {
+    // Fallback: marcador circular dourado
+    return L.divIcon({
+      className: '',
+      html: `<span style="
+        display:block;width:14px;height:14px;border-radius:50%;
+        background:#c4a96d;border:2px solid #8a7148;
+        box-shadow:0 0 0 4px rgba(196,169,109,0.20);
+      "></span>`,
+      iconSize: [14, 14],
+      iconAnchor: [7, 7],
+      popupAnchor: [0, -10],
+    })
+  }
+
+  const html = `
+    <div style="
+      width:32px;height:22px;
+      border-radius:3px;
+      overflow:hidden;
+      border:1.5px solid rgba(255,255,255,0.22);
+      box-shadow:0 2px 8px rgba(0,0,0,0.50), 0 0 0 1px rgba(0,0,0,0.25);
+      cursor:pointer;
+    ">
+      <img
+        src="${flagUrl}"
+        alt="${countryName}"
+        style="width:100%;height:100%;object-fit:cover;display:block"
+        loading="lazy"
+      />
+    </div>
+  `
+
+  return L.divIcon({
+    className: '',
+    html,
+    iconSize: [32, 22],
+    iconAnchor: [16, 11],
+    popupAnchor: [0, -15],
+  })
+}
+
+// Ícone fallback reutilizável (sem bandeira)
+const fallbackIcon = createFlagIcon(null, '')
 
 function formatPopulation(n) {
   if (!n) return '—'
@@ -190,7 +224,7 @@ export function WorldMap({ countries, status, error, isSlow, languageCodes, book
               <Marker
                 key={country.code ?? country.name}
                 position={country.latlng}
-                icon={markerIcon}
+                icon={createFlagIcon(country.flagUrl, country.name)}
               >
                 <Popup>
                   <div className={styles.popupContent}>
