@@ -4,21 +4,18 @@
  * Layout: thumbnail à esquerda + metadados à direita
  * Sem card 3-colunas iguais (proibido pelas skills).
  * Design: spotlight border sutil no hover, scale 0.98 no active.
+ *
+ * Nota: o campo de idioma foi removido deste card.
+ * A Open Library retorna os idiomas de TODAS as edições sem ordem garantida,
+ * tornando inviável exibir um idioma confiável no card de busca.
+ * O idioma é exibido e selecionável no painel BookDetails (após clicar no livro),
+ * onde a função detectPrimaryLanguage() aplica a ordem de prioridade correta.
  */
 
-import { BookOpen, User, Calendar, Translate } from '@phosphor-icons/react'
-import { getLanguageName, normalizeLanguageCode } from '../../utils/languageMapper'
+import { BookOpen, User, Calendar } from '@phosphor-icons/react'
 import styles from './BookCard.module.css'
 
-function getFirstLanguage(languages) {
-  if (!languages?.length) return null
-  return normalizeLanguageCode(languages[0])
-}
-
 export function BookCard({ book, isSelected, onClick }) {
-  const isoLang = getFirstLanguage(book.languages)
-  const langName = isoLang ? getLanguageName(isoLang) : null
-
   return (
     <article
       className={`${styles.card} ${isSelected ? styles.selected : ''}`}
@@ -75,19 +72,12 @@ export function BookCard({ book, isSelected, onClick }) {
               {book.year}
             </span>
           )}
-          {langName && (
+          {book.editionCount > 0 && (
             <span className={styles.tag}>
-              <Translate size={11} weight="fill" aria-hidden="true" />
-              {langName}
+              {book.editionCount} {book.editionCount === 1 ? 'edição' : 'edições'}
             </span>
           )}
         </div>
-
-        {book.editionCount > 0 && (
-          <p className={styles.editions}>
-            {book.editionCount} {book.editionCount === 1 ? 'edição' : 'edições'}
-          </p>
-        )}
       </div>
 
       {/* Indicador de seleção */}
