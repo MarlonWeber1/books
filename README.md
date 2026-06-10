@@ -145,7 +145,8 @@ npm run preview
 | `feat-map-integration` | feature | REST Countries, useCountries, WorldMap Leaflet |
 | `fix(map)` | fix | CSS global Leaflet, altura explícita, invalidateSize |
 | `fix(map+language)` | fix | API name format, detectPrimaryLanguage, multi-seleção |
-| `docs-ai-process` | docs | README + PROCESS (este commit) |
+| `fix-error-handling` | fix | Retry, offline detection, slow indicator, aria-live |
+| `docs-ai-process` | docs | README + PROCESS atualizados |
 
 ---
 

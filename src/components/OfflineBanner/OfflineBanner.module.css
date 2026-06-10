@@ -1,0 +1,56 @@
+/* OfflineBanner.module.css */
+
+.banner {
+  position: fixed;
+  bottom: var(--space-5);
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  z-index: var(--z-toast);
+
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-5);
+
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-lg);
+
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--ink-primary);
+  white-space: nowrap;
+
+  /* Animação de entrada/saída */
+  opacity: 0;
+  transition:
+    opacity 260ms var(--ease-out),
+    transform 320ms var(--ease-spring);
+}
+
+.banner.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.iconOffline {
+  color: var(--error);
+  flex-shrink: 0;
+}
+
+.iconOnline {
+  color: var(--success);
+  flex-shrink: 0;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: currentColor;
+  flex-shrink: 0;
+}
+
+.dotOffline { color: var(--error); }
+.dotOnline  { color: var(--success); }

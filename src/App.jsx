@@ -5,6 +5,8 @@ import { SearchBar } from './components/SearchBar'
 import { BookList } from './components/BookList'
 import { BookDetails } from './components/BookDetails'
 import { WorldMap } from './components/WorldMap'
+import { OfflineBanner } from './components/OfflineBanner'
+import { detectPrimaryLanguage } from './utils/languageMapper'
 import styles from './App.module.css'
 
 /**
@@ -16,6 +18,11 @@ import styles from './App.module.css'
  * 3. BookDetails detecta idiomas e seleciona o principal por padrão
  * 4. useCountries reage ao array de idiomas selecionados
  * 5. WorldMap renderiza marcadores dos países retornados
+ *
+ * Commit 5 (fix-error-handling):
+ * - OfflineBanner: detecta navigator.online e mostra toast
+ * - isSlow: exibido no WorldMap após 6s de loading
+ * - aria-live: regiões anunciam mudanças para leitores de tela
  */
 function App() {
   const {
@@ -29,19 +36,21 @@ function App() {
     clear,
   } = useBookSearch()
 
-  // Array de códigos ISO dos idiomas atualmente selecionados no BookDetails
   const [selectedLanguages, setSelectedLanguages] = useState([])
 
-  // Reage automaticamente à mudança de idiomas selecionados
-  const { countries, status: mapStatus, error: mapError } = useCountries(selectedLanguages)
+  const { countries, status: mapStatus, error: mapError, isSlow } = useCountries(selectedLanguages)
 
   function handleSelectBook(book) {
     selectBook(book)
-    setSelectedLanguages([]) // reseta — BookDetails vai notificar com o primário
+    const primary = detectPrimaryLanguage(book.languages)
+    setSelectedLanguages(primary ? [primary] : [])
   }
 
   return (
     <div className={styles.root}>
+      {/* ── Notificação de rede ────────────────────────────── */}
+      <OfflineBanner />
+
       {/* ── Header ─────────────────────────────────────────── */}
       <header className={styles.header}>
         <div className="container">
@@ -77,6 +86,14 @@ function App() {
                 onClear={clear}
                 isLoading={status === 'loading'}
               />
+              {/* aria-live: anuncia mudanças de status para leitores de tela */}
+              <div aria-live="polite" aria-atomic="true" className="sr-only">
+                {status === 'success' && results.length > 0
+                  ? `${results.length} resultado${results.length !== 1 ? 's' : ''} encontrado${results.length !== 1 ? 's' : ''} para "${query}"`
+                  : status === 'error'
+                  ? `Erro na busca: ${error}`
+                  : null}
+              </div>
               <BookList
                 results={results}
                 status={status}
@@ -94,12 +111,12 @@ function App() {
                 onLanguagesChange={setSelectedLanguages}
               />
 
-              {/* Mapa: visível sempre que um livro está selecionado */}
               {selectedBook && (
                 <WorldMap
                   countries={countries}
                   status={mapStatus}
                   error={mapError}
+                  isSlow={isSlow}
                   languageCodes={selectedLanguages}
                   bookTitle={selectedBook?.title}
                 />

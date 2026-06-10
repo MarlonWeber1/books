@@ -62,8 +62,18 @@ function MapController({ countries }) {
 }
 
 // ── Estados alternativos ────────────────────────────────────────────────────
-function MapSkeleton() {
-  return <div className={`skeleton ${styles.skeleton}`} aria-label="Carregando mapa…" />
+// ── Estado skeleton com indicador de lentidão ──────────────────────────────
+function MapSkeleton({ isSlow }) {
+  return (
+    <div style={{ position: 'relative', height: '100%' }}>
+      <div className={`skeleton ${styles.skeleton}`} aria-label="Carregando mapa…" />
+      {isSlow && (
+        <div className={styles.slowIndicator} aria-live="polite">
+          A API está demorando mais que o esperado…
+        </div>
+      )}
+    </div>
+  )
 }
 
 function IdleState() {
@@ -112,7 +122,7 @@ function ErrorState({ message }) {
 }
 
 // ── Componente principal ────────────────────────────────────────────────────
-export function WorldMap({ countries, status, error, languageCodes, bookTitle }) {
+export function WorldMap({ countries, status, error, isSlow, languageCodes, bookTitle }) {
   const sectionRef = useRef(null)
   const codes = Array.isArray(languageCodes) ? languageCodes : languageCodes ? [languageCodes] : []
   const showMap = status === 'success' && countries.length > 0
@@ -153,7 +163,7 @@ export function WorldMap({ countries, status, error, languageCodes, bookTitle })
       <div className={styles.mapArea} style={{ height: MAP_HEIGHT }}>
 
         {(status === 'idle') && <IdleState />}
-        {status === 'loading' && <MapSkeleton />}
+        {status === 'loading' && <MapSkeleton isSlow={isSlow} />}
         {status === 'empty' && <EmptyState languageCode={langLabel} />}
         {status === 'error' && <ErrorState message={error} />}
 

@@ -80,6 +80,27 @@
   border-radius: 0;
 }
 
+.slowIndicator {
+  position: absolute;
+  bottom: var(--space-5);
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.78rem;
+  color: var(--ink-muted);
+  background-color: rgba(14, 15, 17, 0.72);
+  backdrop-filter: blur(6px);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-full);
+  padding: var(--space-2) var(--space-4);
+  white-space: nowrap;
+  animation: fadeIn 400ms var(--ease-out) forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(4px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
 /* --- Estados ------------------------------------------- */
 .statePanel {
   position: absolute;

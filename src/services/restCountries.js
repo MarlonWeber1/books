@@ -9,6 +9,8 @@
 const BASE_URL = 'https://restcountries.com/v3.1'
 const FIELDS = 'name,cca2,latlng,flags,capital,population,region'
 
+import { fetchWithRetry } from '../utils/fetchWithRetry'
+
 /**
  * Mapa ISO 639-1 → nome em inglês aceito pela REST Countries API.
  * Endpoint: GET /v3.1/lang/{languageName}
@@ -74,15 +76,22 @@ export async function fetchCountriesByLanguage(isoCode) {
     return []
   }
 
-  const res = await fetch(
-    `${BASE_URL}/lang/${apiName}?fields=${FIELDS}`,
-    { signal: AbortSignal.timeout(10_000) }
+  const res = await fetchWithRetry(
+    () => fetch(
+      `${BASE_URL}/lang/${apiName}?fields=${FIELDS}`,
+      { signal: AbortSignal.timeout(10_000) }
+    )
   )
 
   if (res.status === 404) return []
 
   if (!res.ok) {
-    throw new Error(`REST Countries retornou status ${res.status} para idioma "${apiName}"`)
+    const isServerError = res.status >= 500
+    throw new Error(
+      isServerError
+        ? `Servidor REST Countries indisponível (status ${res.status}). Tente novamente.`
+        : `Erro ao buscar países para o idioma "${apiName}" (status ${res.status}).`
+    )
   }
 
   const data = await res.json()

@@ -27,7 +27,7 @@ Software Sênior especialista em React**, aplicando skills de design premium:
 | 2 | `feat-book-search` | Busca de livros + UI de resultados |
 | 3 | `feat-book-details` | Detalhes da obra + Works API |
 | 4 | `feat-map-integration` | Mapa Leaflet + REST Countries |
-| 5 | `fix-error-handling` | Tratamento de erros (pulado a pedido) |
+| 5 | `fix-error-handling` | Retry, offline, lentidão, acessibilidade |
 | 6 | `docs-ai-process` | Documentação (este arquivo) |
 
 A estratégia de commits sequenciais serviu como **contexto estruturado** para o agente:
@@ -170,6 +170,42 @@ o design foi expandido para:
 O botão "Ver no mapa" foi removido. Agora o mapa carrega automaticamente
 ao selecionar um livro, usando o idioma de maior prioridade como default.
 O usuário pode refinar clicando nos outros idiomas.
+
+---
+
+## 5. Commit 5 — Tratamento Robusto de Erros
+
+### 5.1 Retry com Backoff Exponencial (`fetchWithRetry.js`)
+Falhas de rede são transitórias por natureza (roteador reiniciando, celular trocando de antena).
+Um utilitário centralizado retenta a requisição 1x automaticamente com delay de 600ms.
+Importante: **não retenta erros 4xx** (ex: idioma não mapeado = 404) pois são permanentes.
+
+```js
+// Retenta apenas falhas de rede e 5xx — não 4xx
+if (response.status >= 400 && response.status < 500) return response
+```
+
+### 5.2 Detecção de Rede Offline (`useOnlineStatus.js`)
+O hook escuta os eventos nativos `window.online` / `window.offline` e reflete o
+estado de `navigator.onLine`. Qualquer componente pode consumir `useOnlineStatus()`
+sem prop drilling.
+
+### 5.3 Banner de Notificação (`OfflineBanner`)
+Toast fixado no bottom com animação slide-up. Comportamento:
+- Aparece **imediatamente** ao ficar offline
+- Troca a mensagem para "Conexão restaurada" e **some após 3 segundos** ao reconectar
+- `role="status"` + `aria-live="polite"` → anunciado por leitores de tela sem interromper
+
+### 5.4 Indicador de Lentidão (`isSlow` no `useCountries`)
+Se a REST Countries API não responder em 6 segundos, um chip aparece sobre o skeleton:
+_"A API está demorando mais que o esperado…"_
+Isso informa o usuário sem mostrar um erro falso (a resposta pode ainda chegar).
+
+### 5.5 Acessibilidade (`aria-live`)
+Uma região `aria-live="polite"` visualmente oculta (`.sr-only`) anuncia resultados
+de busca para leitores de tela:
+- _"12 resultados encontrados para Harry Potter"_
+- _"Erro na busca: [mensagem]"_
 
 ---
 

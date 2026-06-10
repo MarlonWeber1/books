@@ -137,6 +137,19 @@ h3 { font-size: clamp(1rem, 2vw, 1.25rem); }
   padding-inline: var(--space-6);
 }
 
+/* Acessibilidade: visível apenas para leitores de tela */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
 @media (max-width: 768px) {
   .container {
     padding-inline: var(--space-4);
