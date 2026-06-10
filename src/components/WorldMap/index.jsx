@@ -35,11 +35,11 @@ function createFlagIcon(flagUrl, countryName) {
 
   const html = `
     <div style="
-      width:32px;height:22px;
-      border-radius:3px;
+      width:22px;height:22px;
+      border-radius:50%;
       overflow:hidden;
-      border:1.5px solid rgba(255,255,255,0.22);
-      box-shadow:0 2px 8px rgba(0,0,0,0.50), 0 0 0 1px rgba(0,0,0,0.25);
+      border:2px solid rgba(255,255,255,0.30);
+      box-shadow:0 2px 6px rgba(0,0,0,0.45), 0 0 0 1px rgba(0,0,0,0.18);
       cursor:pointer;
     ">
       <img
@@ -54,9 +54,9 @@ function createFlagIcon(flagUrl, countryName) {
   return L.divIcon({
     className: '',
     html,
-    iconSize: [32, 22],
-    iconAnchor: [16, 11],
-    popupAnchor: [0, -15],
+    iconSize: [22, 22],
+    iconAnchor: [11, 11],
+    popupAnchor: [0, -14],
   })
 }
 
